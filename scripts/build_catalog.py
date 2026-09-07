@@ -1,9 +1,16 @@
 #!/usr/bin/env python3
-"""Build the AX ecosystem catalog README from catalog.json.
+"""Build the AX ecosystem catalog page from catalog.json.
 
-Fetches each tool's latest released version from GitHub and renders the
-registry page grouped by kind. Requires the GitHub CLI (`gh`) for release
-lookups; a tool with no release renders without a version.
+The README renders each tool's version as a live shields.io badge, so the
+versions shown are always current on every render and never need manual
+refresh. A scheduled workflow re-runs this so that:
+
+* the machine-readable `versions.json` cache of latest tags stays fresh, and
+* the README stays in sync whenever `catalog.json` is edited (add/remove/rename
+  a tool or tweak its metadata).
+
+The README itself is deterministic: it only changes when `catalog.json`
+changes, because the version column is a badge, not baked text.
 """
 import json
 import subprocess
@@ -13,6 +20,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 CATALOG = ROOT / "catalog.json"
 README = ROOT / "README.md"
+VERSIONS = ROOT / "versions.json"
 
 KIND_ORDER = ["engine", "host", "transport", "provider", "bridge", "spec"]
 KIND_TITLE = {
@@ -26,17 +34,13 @@ KIND_TITLE = {
 
 
 def latest_tag(name):
-    """Return the latest release tag, else the latest tag, else None."""
-    for query in (
-        f"repos/3-lines-studio/{name}/releases/latest|--jq|.tag_name",
-        f"repos/3-lines-studio/{name}/tags?per_page=1|--jq|.[0].name",
+    """Best-effort: the latest release tag, else the newest tag, else None."""
+    for args in (
+        ["gh", "api", f"repos/3-lines-studio/{name}/releases/latest", "--jq", ".tag_name"],
+        ["gh", "api", f"repos/3-lines-studio/{name}/tags?per_page=1", "--jq", ".[0].name"],
     ):
-        args = query.split("|")
         try:
-            out = subprocess.run(
-                ["gh", "api", args[0], args[1], args[2]],
-                capture_output=True, text=True, timeout=20,
-            )
+            out = subprocess.run(args, capture_output=True, text=True, timeout=20)
             if out.returncode == 0:
                 tag = out.stdout.strip()
                 if tag:
@@ -46,12 +50,23 @@ def latest_tag(name):
     return None
 
 
+def render_badge(name):
+    return f"https://img.shields.io/github/v/release/3-lines-studio/{name}?style=flat-square&label="
+
+
 def main():
     data = json.loads(CATALOG.read_text())
     tools = data["tools"]
 
+    # Machine-readable cache of live latest tags (best-effort).
+    cached = {}
     for t in tools:
-        t["latest_tag"] = latest_tag(t["name"]) if t.get("kind") != "spec" else None
+        if t.get("kind") == "spec":
+            continue
+        cached[t["name"]] = latest_tag(t["name"]) or ""
+    VERSIONS.write_text(
+        json.dumps({"registry": data["registry"], "tools": cached}, indent=2) + "\n"
+    )
 
     groups = {k: [] for k in KIND_ORDER}
     for t in tools:
@@ -81,8 +96,10 @@ def main():
         "",
         "## Catalog",
         "",
-        "The registry is machine-readable in [catalog.json](catalog.json). Rebuild this page with "
-        "`python3 scripts/build_catalog.py`.",
+        "Versions below are live badges from each repo's latest release — they update automatically. "
+        "The registry is machine-readable in [catalog.json](catalog.json); cached latest tags are in "
+        "[versions.json](versions.json). Regenerate with `python3 scripts/build_catalog.py` (or rely "
+        "on the scheduled refresh).",
         "",
     ]
 
@@ -96,8 +113,12 @@ def main():
         lines.append("| --- | --- | --- |")
         for t in entries:
             name = t["name"]
-            ver = t.get("latest_tag") or "—"
-            lines.append(f"| [{name}]({t['repo']}) | {t['role']} | {ver} |")
+            repo = t["repo"]
+            if t.get("kind") == "spec":
+                ver = "specification"
+            else:
+                ver = f"![v]({render_badge(name)})"
+            lines.append(f"| [{name}]({repo}) | {t['role']} | {ver} |")
         lines.append("")
 
     lines += [
@@ -110,9 +131,7 @@ def main():
     ]
 
     README.write_text("\n".join(lines) + "\n")
-    n = len(tools)
-    released = sum(1 for t in tools if t.get("latest_tag"))
-    print(f"wrote {README.name} with {n} tools ({released} with a release)")
+    print(f"wrote {README.name} and {VERSIONS.name} for {len(tools)} tools")
 
 
 if __name__ == "__main__":
