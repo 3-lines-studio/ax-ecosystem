@@ -1,0 +1,156 @@
+{
+  "registry": "AX ecosystem",
+  "description": "Small Unix programs that compose through process boundaries: a headless agent engine, tool providers, transports, a host loader, and protocol bridges, wired together by the Botdir portable directory interface.",
+  "installer": "curl -fsSL https://ax.3lines.studio/install.sh | sh",
+  "tools": [
+    {
+      "name": "ax",
+      "kind": "engine",
+      "role": "Headless agent engine",
+      "description": "A minimal headless LLM coding agent harness for scripts and Unix-style clients. Release binary ~7 MB.",
+      "repo": "https://github.com/3-lines-studio/ax",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- ax",
+      "depends_on": [],
+      "protocol": "--events JSONL"
+    },
+    {
+      "name": "boti",
+      "kind": "host",
+      "role": "Botdir host loader",
+      "description": "Reads bot.toml (consumer, model, base_url, tools, [env], [[pre_run]]), installs the declared binaries, and starts the consumer from the bot root.",
+      "repo": "https://github.com/3-lines-studio/boti",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- boti",
+      "depends_on": ["ax", "slaxi"]
+    },
+    {
+      "name": "slaxi",
+      "kind": "transport",
+      "role": "Slack transport",
+      "description": "Connects the ax engine to Slack: listens for mentions, runs the bot, and posts replies back.",
+      "repo": "https://github.com/3-lines-studio/slaxi",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- slaxi",
+      "depends_on": ["ax"],
+      "protocol": "Slack Events API"
+    },
+    {
+      "name": "wax",
+      "kind": "provider",
+      "role": "Web-fetch tool",
+      "description": "Fetches a web page as Markdown for ax and other LLM tools.",
+      "repo": "https://github.com/3-lines-studio/wax",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- wax",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "bqx",
+      "kind": "provider",
+      "role": "BigQuery tool",
+      "description": "Read-only BigQuery tool for ax.",
+      "repo": "https://github.com/3-lines-studio/bqx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- bqx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "pgx",
+      "kind": "provider",
+      "role": "PostgreSQL tool",
+      "description": "Read-only PostgreSQL tool for ax.",
+      "repo": "https://github.com/3-lines-studio/pgx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- pgx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "slackx",
+      "kind": "provider",
+      "role": "Slack file-upload tool",
+      "description": "Uploads files to Slack for ax.",
+      "repo": "https://github.com/3-lines-studio/slackx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- slackx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "browserx",
+      "kind": "provider",
+      "role": "Chromium tool",
+      "description": "Read-only visible Chromium tool for ax.",
+      "repo": "https://github.com/3-lines-studio/browserx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- browserx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "bashx",
+      "kind": "provider",
+      "role": "Bash tool",
+      "description": "Runs shell commands for ax.",
+      "repo": "https://github.com/3-lines-studio/bashx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- bashx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "fsx",
+      "kind": "provider",
+      "role": "Filesystem tools",
+      "description": "Filesystem tool provider for ax (read, write, list, and friends).",
+      "repo": "https://github.com/3-lines-studio/fsx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- fsx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "skillx",
+      "kind": "provider",
+      "role": "Agent Skills provider",
+      "description": "Agent Skills provider for ax.",
+      "repo": "https://github.com/3-lines-studio/skillx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- skillx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "attachx",
+      "kind": "provider",
+      "role": "Conversation attachment tool",
+      "description": "Copies workspace files into the bot's artifact directory so a transport can deliver them to the user.",
+      "repo": "https://github.com/3-lines-studio/attachx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- attachx",
+      "depends_on": [],
+      "protocol": "describe/run"
+    },
+    {
+      "name": "acpi",
+      "kind": "bridge",
+      "role": "ACP ↔ ax bridge",
+      "description": "Agent Client Protocol (ACP) interface for ax: speaks ACP over stdio and runs ax as a subprocess per turn, so any ACP host can drive the engine.",
+      "repo": "https://github.com/3-lines-studio/acpi",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- acpi",
+      "depends_on": ["ax", "mcpx"],
+      "protocol": "ACP JSON-RPC"
+    },
+    {
+      "name": "mcpx",
+      "kind": "bridge",
+      "role": "MCP ↔ ax bridge",
+      "description": "MCP (Model Context Protocol) tool provider for ax: connects MCP servers and exposes their tools in ax's describe/run convention.",
+      "repo": "https://github.com/3-lines-studio/mcpx",
+      "install": "curl -fsSL https://ax.3lines.studio/install.sh | sh -s -- mcpx",
+      "depends_on": [],
+      "protocol": "MCP client"
+    },
+    {
+      "name": "botdir",
+      "kind": "spec",
+      "role": "Botdir specification",
+      "description": "The portable directory interface for bots. Not a binary — every other piece conforms to it.",
+      "repo": "https://github.com/3-lines-studio/botdir",
+      "install": "",
+      "depends_on": [],
+      "protocol": ""
+    }
+  ]
+}
