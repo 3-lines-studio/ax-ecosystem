@@ -1,18 +1,18 @@
 {
   "registry": "AX ecosystem",
   "tools": {
-    "ax": "v0.4.9",
-    "boti": "v0.1.1",
-    "slaxi": "v0.3.2",
+    "ax": "v0.4.10",
+    "boti": "v0.1.2",
+    "slaxi": "v0.3.3",
     "wax": "v0.3.2",
-    "bqx": "v0.3.1",
+    "bqx": "v0.3.2",
     "pgx": "v0.2.1",
     "slackx": "v0.2.1",
     "browserx": "v0.2.2",
-    "bashx": "v0.2.4",
-    "fsx": "v0.1.2",
+    "bashx": "v0.2.6",
+    "fsx": "v0.1.3",
     "skillx": "v0.1.2",
-    "attachx": "v0.1.1",
+    "attachx": "v0.1.2",
     "acpi": "v0.1.0",
     "mcpx": "v0.1.0"
   }
